@@ -1,0 +1,406 @@
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ZSJYH_NEXT
+OBJECT MODULE PLACED IN zsjyh next.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\c51.exe zsjyh next.c DB OE BR INCDIR(C:\SiLabs\MCU\Inc)
+
+line level    source
+
+   1          #include "C8051F020.h"
+   2          #include "absacc.h"
+   3          #include "data_define.c"
+   4          #include "Init_Device.c"
+   5          
+   6          #define   CS0      XBYTE[0x0000]
+   7          #define   ADC      XBYTE[0x2000]
+   8          #define   DAC      XBYTE[0x4000]
+   9          #define   CS3      XBYTE[0x6000]
+  10          
+  11          sbit    LED1=P1^0;
+  12          sbit    LED2=P1^1;
+  13          sbit    LED3=P1^2;
+  14          sbit    LED4=P1^3;
+  15          
+  16          sfr16 TMR3RL = 0x92;
+  17          sfr16 TMR3 = 0x94;
+  18          
+  19          unsigned char num[] = {0xC0,0xF9,0xA4,0xB0,0x99,
+  20                                                          0x92,0x82,0xF8,0x80,0x90,0xff};
+  21          //数码管
+  22          
+  23          //参数设置
+  24          unsigned char datachar[3];
+  25          unsigned char room_temp, temperature;
+  26          unsigned char flag=0, flag1=1, rece_flag=0;
+  27          unsigned char i=0;
+  28          unsigned char x1=10, x2=10, x3=10, x4=10;//分别对应数码管的四位
+  29          unsigned int rece_cout;
+  30          unsigned char temp;
+  31          unsigned char Interger, Decimals;
+  32          unsigned char cc;
+  33          //参数设置
+  34          
+  35          void UART0_Init(void);
+  36          void delay(unsigned int x);
+  37          void Timer3_Init(int counts);
+  38          void Receive_data(void);
+  39          void Send_data(unsigned int sign, unsigned char data1, unsigned char data2);
+  40          unsigned char Sendchar(unsigned int sign1);
+  41          unsigned char ADC_get(void);
+  42          unsigned int D_Temperature(unsigned char x);
+  43          void display_temp(unsigned int x);
+  44          void temp_adc_display(void);
+  45          void change_temp(void);
+  46          void temp_dac_change(void);
+  47          void Launch(unsigned char Data[3]);
+  48          
+  49          
+  50          void UART0_Init(void)
+  51          {
+  52   1          CKCON = 0x00;               
+  53   1          SCON0 = 0x50;
+  54   1          TMOD = 0x21;
+  55   1          TH1 = 0xFD;
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 2   
+
+  56   1          TL1 = 0xFD;
+  57   1              EA=1;
+  58   1          //ES0 = 1;//UART0 中断开启
+  59   1          TR1 = 1;//启动定时器T1
+  60   1          TI0 = 1;
+  61   1          TR0 = 1;
+  62   1      }//串口初始化
+  63          
+  64          void delay(unsigned int x)
+  65          {
+  66   1          unsigned long i;
+  67   1          for(i=0;i<x;i++);
+  68   1      }//延时函数
+  69          
+  70          void Timer3_Init(int counts)
+  71          {
+  72   1          TMR3CN = 0x00;
+  73   1          TMR3RL = -counts;
+  74   1          TMR3 = 0xFFFF;
+  75   1          EIE2 |= 0x01;
+  76   1          TMR3CN |= 0x04;
+  77   1      }//T3时钟初始化函数
+  78          
+  79          void Timer3_ISR (void) interrupt 14
+  80          {
+  81   1         TMR3CN &= ~(0x80);
+  82   1              i++;
+  83   1              if(i==5)i=0;
+  84   1              switch(i)
+  85   1              {
+  86   2                      case 1:
+  87   2                              LED1=1;
+  88   2                              LED2=1;
+  89   2                              LED3=1;
+  90   2                              LED4=1;
+  91   2                              P3=num[x4];
+  92   2                              LED1=0;
+  93   2                              LED2=1;
+  94   2                              LED3=1;
+  95   2                              LED4=1;
+  96   2                              break;
+  97   2                      case 2:
+  98   2                              LED1=1;
+  99   2                              LED2=1;
+ 100   2                              LED3=1;
+ 101   2                              LED4=1;
+ 102   2                              P3=num[x3];
+ 103   2                              LED1=1;
+ 104   2                              LED2=0;
+ 105   2                              LED3=1;
+ 106   2                              LED4=1;
+ 107   2                              break;
+ 108   2                      case 3:
+ 109   2                              LED1=1;
+ 110   2                              LED2=1;
+ 111   2                              LED3=1;
+ 112   2                              LED4=1;
+ 113   2                              P3=num[x2];
+ 114   2                              LED1=1;
+ 115   2                              LED2=1;
+ 116   2                              LED3=0;
+ 117   2                              LED4=1;
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 3   
+
+ 118   2                              break;
+ 119   2                      case 4:
+ 120   2                              LED1=1;
+ 121   2                              LED2=1;
+ 122   2                              LED3=1;
+ 123   2                              LED4=1;
+ 124   2                              P3=num[x1];
+ 125   2                              LED1=1;
+ 126   2                              LED2=1;
+ 127   2                              LED3=1;
+ 128   2                              LED4=0;
+ 129   2                              break;
+ 130   2                      default:
+ 131   2                              LED1=1;
+ 132   2                              LED2=1;
+ 133   2                              LED3=1;
+ 134   2                              LED4=1;
+ 135   2                              break;
+ 136   2              }
+ 137   1      }//时钟T3中断
+ 138          
+ 139          void Receive_data(void)
+ 140          {
+ 141   1          
+ 142   1           rece_cout=6;
+ 143   1          while(rece_cout)
+ 144   1          {
+ 145   2              while(RI0 == 0);
+ 146   2              temp = SBUF0;
+ 147   2              switch(rece_cout)
+ 148   2              {
+ 149   3                  case 6:
+ 150   3                      if (temp == 'C') rece_cout = 5;
+ 151   3                      RI0=0;
+ 152   3                      break;
+ 153   3                  case 5:
+ 154   3                      if (temp == 'O') rece_cout = 4;
+ 155   3                      RI0=0;
+ 156   3                      break;
+ 157   3                  case 4:
+ 158   3                      if (temp == 'M') rece_cout = 3;
+ 159   3                      RI0=0;
+ 160   3                      break;
+ 161   3                  case 3:
+ 162   3                      datachar[0] = temp;
+ 163   3                      rece_cout--;
+ 164   3                      RI0=0;
+ 165   3                      break;
+ 166   3                  case 2:
+ 167   3                      datachar[1] = temp;
+ 168   3                      rece_cout--;
+ 169   3                      RI0=0;
+ 170   3                      break;
+ 171   3                  case 1:
+ 172   3                      datachar[2] = temp;
+ 173   3                      rece_cout--;
+ 174   3                      RI0=0;
+ 175   3                      break;
+ 176   3                  default:
+ 177   3                      break; 
+ 178   3              }
+ 179   2          }
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 4   
+
+ 180   1          rece_flag = 1;
+ 181   1      }//接受数据
+ 182          
+ 183          void Launch(unsigned char Data[3])
+ 184          {   
+ 185   1          
+ 186   1                      cc=Data[0];
+ 187   1                      cc=cc&0xF0;
+ 188   1          if ((cc == 0xA0) && (rece_flag == 1))
+ 189   1          {
+ 190   2              unsigned char choice = Data[0];
+ 191   2              unsigned char opera, Dec, data1, data2;
+ 192   2              switch(choice)
+ 193   2                                      {
+ 194   3                                      case 0xA0 :
+ 195   3                      Interger = Data[1];
+ 196   3                      Decimals = Data[2];
+ 197   3                      temperature = Interger+Decimals/100;
+ 198   3                      flag = 1;
+ 199   3                      break;
+ 200   3                              case 0xA1:  
+ 201   3                      temperature++;
+ 202   3                      flag = 1;
+ 203   3                      break;
+ 204   3                  case 0xA2 :
+ 205   3                      temperature--;
+ 206   3                      flag = 1;
+ 207   3                      break;
+ 208   3                  case 0xA3 :
+ 209   3                      if(flag1 == 0) flag1 = 1;
+ 210   3                      else flag1 = 0;
+ 211   3                      
+ 212   3                      break;
+ 213   3                  case 0xA6 :
+ 214   3                      opera = Data[1];
+ 215   3                      DAC = opera;
+ 216   3                                      flag=0;
+ 217   3                      break;
+ 218   3                  case 0xA8 :
+ 219   3                      temp_adc_display();
+ 220   3                      Dec = 0x00;
+ 221   3                                                                      if (room_temp>99) room_temp=99;
+ 222   3                      Send_data(8, room_temp, Dec);
+ 223   3                      break;
+ 224   3                  case 0xAE :
+ 225   3                      if(flag1 == 0) data1 = 0xFF;
+ 226   3                      else data1 = 0x7F;
+ 227   3                      data2 = 0xFF;
+ 228   3                      Send_data(14, data1, data2);
+ 229   3                      break;
+ 230   3                  default:
+ 231   3                      break;
+ 232   3              }
+ 233   2              rece_flag = 0;
+ 234   2          }
+ 235   1      
+ 236   1      }//判断功能
+ 237          
+ 238          void Send_data(unsigned int sign, unsigned char data1, unsigned char data2)
+ 239          {
+ 240   1          unsigned int send_cout=6;
+ 241   1          REN0 = 0;
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 5   
+
+ 242   1          while(send_cout > 0)
+ 243   1          {
+ 244   2              switch(send_cout)
+ 245   2              {
+ 246   3                  case 6 :
+ 247   3                      SBUF0 = 'C';
+ 248   3                      send_cout--;
+ 249   3                      break;
+ 250   3                  case 5 :
+ 251   3                      SBUF0 = 'O';
+ 252   3                      send_cout--;
+ 253   3                      break;
+ 254   3                  case 4 :
+ 255   3                      SBUF0 = 'M';
+ 256   3                      send_cout--;
+ 257   3                      break;
+ 258   3                  case 3 :
+ 259   3                      SBUF0 = Sendchar(sign);
+ 260   3                      send_cout--;
+ 261   3                      break;
+ 262   3                  case 2 :
+ 263   3                      SBUF0 = data1;
+ 264   3                      send_cout--;
+ 265   3                      break;
+ 266   3                  case 1 :
+ 267   3                      SBUF0 = data2;
+ 268   3                      send_cout--;
+ 269   3                      break;
+ 270   3              }
+ 271   2              while(TI0 == 0);
+ 272   2              TI0 = 0;
+ 273   2          }
+ 274   1           REN0 = 1;
+ 275   1      }//发送数据
+ 276          
+ 277          unsigned char Sendchar(unsigned int sign1)
+ 278          {   
+ 279   1          unsigned char scha;
+ 280   1          switch(sign1)
+ 281   1          {
+ 282   2              case 8:
+ 283   2                  scha = 0xA8;
+ 284   2                  break;
+ 285   2              case 10:
+ 286   2                  scha = 0xAA;
+ 287   2                  break;
+ 288   2              case 11:
+ 289   2                  scha = 0xAB;
+ 290   2                  break;
+ 291   2              case 14:
+ 292   2                  scha = 0xAE;
+ 293   2                  break;
+ 294   2          }
+ 295   1          return scha;
+ 296   1      }
+ 297          
+ 298          unsigned char ADC_get(void)
+ 299          {
+ 300   1          unsigned char xx;
+ 301   1              ADC = 0;
+ 302   1              delay(1000);
+ 303   1              xx = ADC;
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 6   
+
+ 304   1              return xx;
+ 305   1      }//获取温度函数
+ 306          unsigned int D_Temperature(unsigned char x)
+ 307          {
+ 308   1              long int y;
+ 309   1              y = x;
+ 310   1              y = (y*100)/255;
+ 311   1              if (y>99)       y=99;
+ 312   1              return y;
+ 313   1      }//温度数字化处理
+ 314          void temp_adc_display(void)
+ 315          {
+ 316   1              unsigned char a;
+ 317   1              unsigned int b;
+ 318   1              a = ADC_get();
+ 319   1              b = D_Temperature(a);
+ 320   1              room_temp = b;
+ 321   1              display_temp(b);
+ 322   1      }//温度数据采集显示
+ 323          void display_temp(unsigned int x)
+ 324          {
+ 325   1              x1 = x/10;
+ 326   1              x2 = (x-x1*10);
+ 327   1      }//显示温度
+ 328          
+ 329          void change_temp(void)
+ 330          {
+ 331   1              temp_adc_display();
+ 332   1              if(temperature > room_temp)
+ 333   1              {
+ 334   2              
+ 335   2                      DAC = 0xC0;
+ 336   2              }
+ 337   1              else
+ 338   1              {
+ 339   2                      DAC = 0x60;
+ 340   2              }
+ 341   1      }//改变温度
+ 342          
+ 343          void temp_dac_change(void)
+ 344          {
+ 345   1              if(flag1==0)
+ 346   1              {
+ 347   2                      if(flag==1)
+ 348   2                      {
+ 349   3                              change_temp();
+ 350   3                      }
+ 351   2              }
+ 352   1              else
+ 353   1              {
+ 354   2                      DAC = 0x7A; 
+ 355   2              }
+ 356   1      }//温度改变调度函数
+ 357          
+ 358          void main(void)
+ 359          {
+ 360   1              Init_Device();
+ 361   1              Timer3_Init(100);  
+ 362   1              UART0_Init();
+ 363   1              DAC=0x7A;
+ 364   1              while(1)
+ 365   1              {   
+C51 COMPILER V9.00   ZSJYH_NEXT                                                            04/01/2019 19:21:48 PAGE 7   
+
+ 366   2              temp_adc_display();
+ 367   2          Receive_data();
+ 368   2              Launch(datachar);
+ 369   2              temp_dac_change();
+ 370   2              }
+ 371   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1068    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     30      19
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,56 @@
+C51 COMPILER V9.00   DP_GE_TEST2                                                           11/13/2018 15:04:36 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE DP_GE_TEST2
+OBJECT MODULE PLACED IN DP_GE_test2.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\c51.exe DP_GE_test2.c DB OE BR INCDIR(C:\SiLabs\MCU\Inc)
+
+line level    source
+
+   1          #include "C8051F020.h"
+   2          #include "absacc.h"
+   3          #include "data_define.c"
+   4          #define    LED1      XBYTE[0x0000]
+   5          #define    LED2      XBYTE[0x0001]
+   6          #define    LED3      XBYTE[0x0002]
+   7          #define    LED4      XBYTE[0x0003]
+   8          #include "Init_Device.c"
+   9          unsigned char num[]={0xC0,0xF9,0xA4,0xB0,0x99,
+  10                                                          0x92,0x82,0xF8,0x80,0x90,0x7f};
+  11          void delay(uint x)
+  12          { 
+  13   1        unsigned long i;
+  14   1              for(i=0;i<1000*x;++i) i=i; 
+  15   1      }
+  16          
+  17          void main(void)
+  18          {  
+  19   1        unsigned  char i;
+  20   1        Init_Device();        
+  21   1        LED1=LED2=LED3=LED4=0xff;
+  22   1        while(1)
+  23   1        {  
+  24   2                      for(i=0;i<11;++i)
+  25   2          { 
+  26   3                  LED1=num[i]; 
+  27   3            LED2=num[i];
+  28   3                              LED3=num[i]; 
+  29   3            LED4=num[i];
+  30   3            delay(60); 
+  31   3          }     
+  32   2        }
+  33   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    241    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     11       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

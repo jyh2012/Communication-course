@@ -1,0 +1,145 @@
+C51 COMPILER V9.00   INIT_DEVICE                                                           03/26/2019 14:33:13 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE INIT_DEVICE
+OBJECT MODULE PLACED IN Init_Device.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\c51.exe Init_Device.c DB OE BR INCDIR(C:\SiLabs\MCU\Inc)
+
+line level    source
+
+   1          /**********************************************************************************
+   2           *                                                                                *
+   3           *              EM-023��Ƭ������ͷ��������---������ҵ��ѧ�繤�
+             -���ʵ���ѧ����         *
+   4           *                                                                                *
+   5           **********************************************************************************/
+   6          
+   7           //------------------------------------------------------------------------------//     
+   8           //             "Init_DeviceA.c"���豸��ʼ�������飬���������е��
+             -��Init_DeviceA()       // 
+   9           //------------------------------------------------------------------------------//
+  10          
+  11          
+  12          void Reset_Sources_Init()
+  13          {
+  14   1        WDTCN     = 0xDE;
+*** ERROR C202 IN LINE 14 OF INIT_DEVICE.C: 'WDTCN': undefined identifier
+  15   1        WDTCN     = 0xAD;
+*** ERROR C202 IN LINE 15 OF INIT_DEVICE.C: 'WDTCN': undefined identifier
+  16   1      }
+  17          
+  18          
+  19          //���濪�����ú�������ɻ�������ѡ��Ͷ˿���Դ�ķ�
+             -��
+  20          void Port_IO_Init()
+  21          {
+  22   1        // P2MDOUT   = 0xFF;
+  23   1        // P3MDOUT   = 0xFF;
+  24   1              P1MDOUT=0x00;
+*** ERROR C202 IN LINE 24 OF INIT_DEVICE.C: 'P1MDOUT': undefined identifier
+  25   1              P3MDOUT=0x00;
+*** ERROR C202 IN LINE 25 OF INIT_DEVICE.C: 'P3MDOUT': undefined identifier
+  26   1        XBR0     =0x04; //= 0x0F;                                                                                                                             //UART0��TX0,RX0 �����˿�����P0.0,P0.1
+*** ERROR C202 IN LINE 26 OF INIT_DEVICE.C: 'XBR0': undefined identifier
+  27   1                                                                                                                                                                                                              //SPI0��SCK, MISO, MOSI���ӵ��˿�����P0.2,P0.3,P0.4
+  28   1                                                                                                                                                                                                              //SPI0��NSS���ӵ��˿�����P1.0
+  29   1                                                                                                                                                                                                              //MSBus��SDA, SCL���ӵ��˿�����P1.1,P1.2
+  30   1          
+  31   1              XBR1      = 0x04; //0x1E                                                                                                                                //T0,T1 �����˿�����P1.4,P1.6
+*** ERROR C202 IN LINE 31 OF INIT_DEVICE.C: 'XBR1': undefined identifier
+  32   1                                                                                                                                                                                                              //INT0 �����˿�����P1.5
+  33   1                                                                                                                                                                                                              //INT1 �����˿�����P1.7
+  34   1                                                                                                                                                                                                              //CEX0 �����˿�����P1.3
+  35   1          
+  36   1              XBR2      = 0xC0; //0x40                                                                                                                                //��ֹ������    
+*** ERROR C202 IN LINE 36 OF INIT_DEVICE.C: 'XBR2': undefined identifier
+  37   1                                                                                                                                                                                                              //���濪��ʹ��
+  38   1                                                                                                                                                                                                              //ʹ�õͶ�EMI
+  39   1      
+  40   1                        
+  41   1              EMI0CF    = 0x0B;//0x0F                                                                                                                         //ѡ��P2-P3��Ϊ���߶˿ڣ����÷�ʽ���
+             -�ʹ���ⲿRAM 
+*** ERROR C202 IN LINE 41 OF INIT_DEVICE.C: 'EMI0CF': undefined identifier
+  42   1        EMI0TC    = 0xDF;//DF                                                                                                                         //���߷��ʵ�ַ����ʱ��3��SYS����
+             -�
+C51 COMPILER V9.00   INIT_DEVICE                                                           03/26/2019 14:33:13 PAGE 2   
+
+*** ERROR C202 IN LINE 42 OF INIT_DEVICE.C: 'EMI0TC': undefined identifier
+  43   1                                                                                                                                                                                                              //���߷��ʶ�/д�������8��SYS����
+  44   1                                                                                                                                                                                                              //���߷��ʵ�ַ����ʱ��3��SYS����
+  45   1              P74OUT=0xFF;
+*** ERROR C202 IN LINE 45 OF INIT_DEVICE.C: 'P74OUT': undefined identifier
+  46   1      }
+  47          
+  48          //������ʼ������,ʹ��Ƭ�⾧������
+  49          void Oscillator_Init()
+  50          {
+  51   1        uint i = 0;
+*** ERROR C202 IN LINE 51 OF INIT_DEVICE.C: 'uint': undefined identifier
+*** ERROR C141 IN LINE 51 OF INIT_DEVICE.C: syntax error near 'i'
+  52   1        OSCXCN    = 0x67;                                                                                                             //ʹ��Ƭ�⾧��г������f>6.7MHz
+*** ERROR C202 IN LINE 52 OF INIT_DEVICE.C: 'OSCXCN': undefined identifier
+  53   1        for (i = 0; i < 3000; i++);                                                                   //�ȴ�1mS��ɲ���
+*** ERROR C202 IN LINE 53 OF INIT_DEVICE.C: 'i': undefined identifier
+  54   1        while ((OSCXCN & 0x80) == 0);                                                                 //����ⲿ�����Ƿ���Ч
+*** ERROR C202 IN LINE 54 OF INIT_DEVICE.C: 'OSCXCN': undefined identifier
+  55   1        OSCICN    = 0x08;                                                                                                             //ѡ���ⲿ������Ϊϵͳʱ�ӣ���ֹ�ڲ�ʱ�
+             -�
+*** ERROR C202 IN LINE 55 OF INIT_DEVICE.C: 'OSCICN': undefined identifier
+  56   1      }                                                                       
+  57          
+  58          //�ο���ѹԴ��ʼ������
+  59          void Voltage_Reference_Init()
+  60          {
+  61   1        REF0CN    = 0x03;
+*** ERROR C202 IN LINE 61 OF INIT_DEVICE.C: 'REF0CN': undefined identifier
+  62   1      }
+  63          
+  64          //ADC0��ʼ������
+  65          void ADC0_Init()
+  66          {
+  67   1              AMX0CF  = 0x00;
+*** ERROR C202 IN LINE 67 OF INIT_DEVICE.C: 'AMX0CF': undefined identifier
+  68   1              AMX0SL  = 0x00;
+*** ERROR C202 IN LINE 68 OF INIT_DEVICE.C: 'AMX0SL': undefined identifier
+  69   1              ADC0CF  = 0x28;
+*** ERROR C202 IN LINE 69 OF INIT_DEVICE.C: 'ADC0CF': undefined identifier
+  70   1              ADC0CN  = 0x81;
+*** ERROR C202 IN LINE 70 OF INIT_DEVICE.C: 'ADC0CN': undefined identifier
+  71   1      }
+  72          
+  73          //ADC1��ʼ������
+  74          void ADC1_Init()
+  75          {
+  76   1              AMX1SL  = 0x07;
+*** ERROR C202 IN LINE 76 OF INIT_DEVICE.C: 'AMX1SL': undefined identifier
+  77   1              ADC1CF  = 0x19;
+*** ERROR C202 IN LINE 77 OF INIT_DEVICE.C: 'ADC1CF': undefined identifier
+  78   1        ADC1CN  = 0x80;
+*** ERROR C202 IN LINE 78 OF INIT_DEVICE.C: 'ADC1CN': undefined identifier
+  79   1      }
+  80          
+  81          void DAC_Init()
+  82          {
+  83   1        DAC0CN    = 0x84;
+*** ERROR C202 IN LINE 83 OF INIT_DEVICE.C: 'DAC0CN': undefined identifier
+  84   1              DAC1CN    = 0x84;
+*** ERROR C202 IN LINE 84 OF INIT_DEVICE.C: 'DAC1CN': undefined identifier
+  85   1      
+C51 COMPILER V9.00   INIT_DEVICE                                                           03/26/2019 14:33:13 PAGE 3   
+
+  86   1      }
+  87          
+  88          //�豸��ʼ�����������������е���Init_DeviceA()
+  89          void Init_Device()
+  90          {
+  91   1        Reset_Sources_Init();                                                                                                         //��λԴ��ʼ��
+  92   1        Port_IO_Init();                                                                                                                                       //�˿ڳ�ʼ��
+  93   1        Oscillator_Init();                                                                                                                    //ʱ��Դ��ʼ��
+  94   1              Voltage_Reference_Init();
+  95   1              ADC0_Init();
+  96   1              ADC1_Init();
+  97   1              DAC_Init();
+  98   1      }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  26 ERROR(S)

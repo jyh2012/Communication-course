@@ -1,0 +1,156 @@
+C51 COMPILER V9.00   ZZZ                                                                   03/26/2019 15:26:40 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ZZZ
+OBJECT MODULE PLACED IN zzz.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\c51.exe zzz.c DB OE BR INCDIR(C:\SiLabs\MCU\Inc)
+
+line level    source
+
+   1          #include "C8051F020.h"
+   2          #include "absacc.h"
+   3          #include "data_define.c"
+   4          #define   CS1      XBYTE[0x2000]
+   5          sbit    LED1=P1^0;
+   6          sbit    LED2=P1^1;
+   7          sbit    LED3=P1^2;
+   8          sbit    LED4=P1^3;
+   9          sfr16 TMR3RL = 0x92;
+  10          sfr16 TMR3 = 0x94;
+  11          #include "Init_Device.c"
+  12          unsigned char num[]={0xC0,0xF9,0xA4,0xB0,0x99,
+  13                                                          0x92,0x82,0xF8,0x80,0x90,0x7f};
+  14          unsigned char i=0;
+  15          unsigned char x1,x2,x3,x4;
+  16          unsigned int temperature; 
+  17          void delay(unsigned int x)
+  18          { 
+  19   1        unsigned long i;
+  20   1              for(i=0;i<x;++i) i=i; 
+  21   1      }
+  22          void Timer3_Init (int counts)
+  23          {       
+  24   1              TMR3CN = 0x00;
+  25   1              TMR3RL = -counts;
+  26   1              TMR3 = 0xFFFF;
+  27   1              EIE2 |= 0x01;
+  28   1              TMR3CN |= 0x04;
+  29   1      }
+  30          void Timer3_ISR (void) interrupt 14
+  31          {
+  32   1              TMR3CN &= ~(0x80);
+  33   1              i++;
+  34   1              if(i==5)i=0;
+  35   1              switch(i)
+  36   1              {
+  37   2                      case 1:
+  38   2                              LED1=1;
+  39   2                              LED2=1;
+  40   2                              LED3=1;
+  41   2                              LED4=1;
+  42   2                              P3=num[x4];
+  43   2                              LED1=0;
+  44   2                              LED2=1;
+  45   2                              LED3=1;
+  46   2                              LED4=1;
+  47   2                              break;  
+  48   2                      case 2:
+  49   2                              LED1=1;
+  50   2                              LED2=1;
+  51   2                              LED3=1;
+  52   2                              LED4=1;
+  53   2                              P3=(num[x3] & 0x7F);
+  54   2                              LED1=1;
+  55   2                              LED2=0;
+C51 COMPILER V9.00   ZZZ                                                                   03/26/2019 15:26:40 PAGE 2   
+
+  56   2                              LED3=1;
+  57   2                              LED4=1;
+  58   2                              break;  
+  59   2                      case 3:
+  60   2                              LED1=1;
+  61   2                              LED2=1;
+  62   2                              LED3=1;
+  63   2                              LED4=1;
+  64   2                              P3=num[x2];
+  65   2                              LED1=1;
+  66   2                              LED2=1;
+  67   2                              LED3=0;
+  68   2                              LED4=1;
+  69   2                              break;                  
+  70   2                      case 4:
+  71   2                              LED1=1;
+  72   2                              LED2=1;
+  73   2                              LED3=1;
+  74   2                              LED4=1;
+  75   2                              P3=num[x1];
+  76   2                              LED1=1;
+  77   2                              LED2=1;
+  78   2                              LED3=1;
+  79   2                              LED4=0;
+  80   2                              break;
+  81   2                      default:
+  82   2                              LED1=1;
+  83   2                              LED2=1;
+  84   2                              LED3=1;
+  85   2                              LED4=1;
+  86   2                              break;          
+  87   2              }
+  88   1      }
+  89          unsigned char ADCacc(void)
+  90          {
+  91   1              unsigned char xx;
+  92   1              CS1 = 0;
+  93   1              delay(16000);
+  94   1              xx = CS1;
+  95   1              return xx;
+  96   1      }
+  97          unsigned int Temperature(unsigned int x)
+  98          {
+  99   1              unsigned int y;
+ 100   1              y = x;
+ 101   1              y = (y*1000)/255;
+ 102   1              if (y>1000)y=1000;
+ 103   1              return y;
+ 104   1      }
+ 105          void display(unsigned int x)
+ 106          {
+ 107   1              x1 = x/1000;
+ 108   1              x2 = (x-x1*1000)/100;
+ 109   1              x3 = (x-x1*1000-x2*100)/10;
+ 110   1              x4 = (x-x1*1000-x2*100-x3*10);
+ 111   1      }
+ 112          void main(void)
+ 113          {  
+ 114   1              unsigned char a;
+ 115   1              unsigned int c;
+ 116   1              Init_Device();
+ 117   1              Timer3_Init(500);
+C51 COMPILER V9.00   ZZZ                                                                   03/26/2019 15:26:40 PAGE 3   
+
+ 118   1              EA=1;
+ 119   1              LED1=0;
+ 120   1              LED2=1;
+ 121   1              LED3=1;
+ 122   1              LED4=1;
+ 123   1              while(1)
+ 124   1              {
+ 125   2                      a=ADCacc();
+ 126   2                      c=Temperature(a);
+ 127   2                      display(c);
+ 128   2              }
+ 129   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    551    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     18       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,1 @@
+"C:\Users\Administrator\Desktop\电子工程设计-2例程\zsjyh next.obj"  TO "C:\Users\Administrator\Desktop\电子工程设计-2例程\MCU_GE_test" RS(256) PL(68) PW(78) 

@@ -1,0 +1,317 @@
+C51 COMPILER V9.00   ZSJYH                                                                 04/01/2019 19:05:11 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ZSJYH
+OBJECT MODULE PLACED IN zsjyh.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\c51.exe zsjyh.c DB OE BR INCDIR(C:\SiLabs\MCU\Inc)
+
+line level    source
+
+   1          #include "C8051F020.h"
+   2          #include "absacc.h"
+   3          #include "data_define.c"
+   4          #include "Init_Device.c"
+   5          
+   6          #define   CS0      XBYTE[0x0000]
+   7          #define   ADC      XBYTE[0x2000]
+   8          #define   DAC      XBYTE[0x4000]
+   9          #define   CS3      XBYTE[0x6000]
+  10          
+  11          sbit    LED1=P1^0;
+  12          sbit    LED2=P1^1;
+  13          sbit    LED3=P1^2;
+  14          sbit    LED4=P1^3;
+  15          
+  16          sfr16 TMR3RL = 0x92;
+  17          sfr16 TMR3 = 0x94;
+  18          
+  19          unsigned char num[] = {0xC0,0xF9,0xA4,0xB0,0x99,
+  20                                                          0x92,0x82,0xF8,0x80,0x90,0xff};
+  21          //数码管
+  22          unsigned char keys[4][4] = {    {0,1,2,3},
+  23                                                                          {4,5,6,7},
+  24                                                                          {8,9,10,11},
+  25                                                                          {12,13,14,15}};
+  26          //按键表
+  27          unsigned char x1=10,x2=10,x3=10,x4=10;//分别对应数码管的四位
+  28          unsigned char flag=0,flag1=1,room_temp,temperature=0,A_sign = 0, B_sign = 0, i=0,ones,tens;
+  29          unsigned char VAL138,VAL244;
+  30          void delay(unsigned int x);
+  31          void Timer3_Init(int counts);
+  32          unsigned char ADC_get(void);
+  33          unsigned int D_Temperature(unsigned char x);
+  34          void display_temp(unsigned int x);
+  35          void temp_adc_display(void);
+  36          void Key(void);
+  37          int key_shake(void);
+  38          void judge_key(unsigned char x,unsigned char y);
+  39          void key_get(void);
+  40          void set_temp(unsigned char x);
+  41          void change_temp(void);
+  42          void temp_dac_change(void);
+  43          
+  44                  unsigned int bb=0;//
+  45          void delay(unsigned int x)
+  46          {
+  47   1          unsigned long i;
+  48   1          for(i=0;i<x;i++);
+  49   1      }//延时函数
+  50          void Timer3_Init(int counts)
+  51          {
+  52   1          TMR3CN = 0x00;
+  53   1          TMR3RL = -counts;
+  54   1          TMR3 = 0xFFFF;
+  55   1          EIE2 |= 0x01;
+C51 COMPILER V9.00   ZSJYH                                                                 04/01/2019 19:05:11 PAGE 2   
+
+  56   1          TMR3CN |= 0x04;
+  57   1      }//T3时钟初始化函数
+  58          void Timer3_ISR (void) interrupt 14
+  59          {
+  60   1      
+  61   1          TMR3CN &= ~(0x80);
+  62   1              i++;
+  63   1              if(i==5)i=0;
+  64   1              switch(i)
+  65   1              {
+  66   2                      case 1:
+  67   2                              LED1=1;
+  68   2                              LED2=1;
+  69   2                              LED3=1;
+  70   2                              LED4=1;
+  71   2                              P3=num[x4];
+  72   2                              LED1=0;
+  73   2                              LED2=1;
+  74   2                              LED3=1;
+  75   2                              LED4=1;
+  76   2                              break;
+  77   2                      case 2:
+  78   2                              LED1=1;
+  79   2                              LED2=1;
+  80   2                              LED3=1;
+  81   2                              LED4=1;
+  82   2                              P3=num[x3];
+  83   2                              LED1=1;
+  84   2                              LED2=0;
+  85   2                              LED3=1;
+  86   2                              LED4=1;
+  87   2                              break;
+  88   2                      case 3:
+  89   2                              LED1=1;
+  90   2                              LED2=1;
+  91   2                              LED3=1;
+  92   2                              LED4=1;
+  93   2                              P3=num[x2];
+  94   2                              LED1=1;
+  95   2                              LED2=1;
+  96   2                              LED3=0;
+  97   2                              LED4=1;
+  98   2                              break;
+  99   2                      case 4:
+ 100   2                              LED1=1;
+ 101   2                              LED2=1;
+ 102   2                              LED3=1;
+ 103   2                              LED4=1;
+ 104   2                              P3=num[x1];
+ 105   2                              LED1=1;
+ 106   2                              LED2=1;
+ 107   2                              LED3=1;
+ 108   2                              LED4=0;
+ 109   2                              break;
+ 110   2                      default:
+ 111   2                              LED1=1;
+ 112   2                              LED2=1;
+ 113   2                              LED3=1;
+ 114   2                              LED4=1;
+ 115   2                              break;
+ 116   2              }
+ 117   1      }//时钟T3中断
+C51 COMPILER V9.00   ZSJYH                                                                 04/01/2019 19:05:11 PAGE 3   
+
+ 118          unsigned char ADC_get(void)
+ 119          {
+ 120   1          unsigned char xx;
+ 121   1              ADC = 0;
+ 122   1              delay(1000);
+ 123   1              xx = ADC;
+ 124   1              return xx;
+ 125   1      }//获取温度函数
+ 126          unsigned int D_Temperature(unsigned char x)
+ 127          {
+ 128   1              long int y;
+ 129   1              y = x;
+ 130   1              y = (y*100)/255;
+ 131   1              if (y>99)       y=99;
+ 132   1              return y;
+ 133   1      }//温度数字化处理
+ 134          void display_temp(unsigned int x)
+ 135          {
+ 136   1              x1 = x/10;
+ 137   1              x2 = (x-x1*10);
+ 138   1      }//显示温度
+ 139          void temp_adc_display(void)
+ 140          {
+ 141   1              unsigned char a;
+ 142   1              unsigned int b;
+ 143   1              a = ADC_get();
+ 144   1              b = D_Temperature(a);
+ 145   1              room_temp = b;
+ 146   1              display_temp(b);
+ 147   1      }//温度数据采集显示
+ 148          void Key(void)
+ 149          {
+ 150   1              unsigned int code addr16[] = {0x0000, 0x0100, 0x0800, 0x0900};
+ 151   1              unsigned char val_138, val_244, state_244, temp, c;
+ 152   1              unsigned int hex;
+ 153   1              for(val_138=1;val_138<5;val_138++)
+ 154   1              {
+ 155   2                      hex = addr16[val_138-1];
+ 156   2                      c = XBYTE[hex];
+ 157   2                      state_244 = (~c)&0x0F;
+ 158   2                      if(state_244!=0)
+ 159   2                      {
+ 160   3                              for(val_244=1,temp=1;val_244<5;val_244++,temp=temp<<1)
+ 161   3                              {
+ 162   4                                      if((state_244&temp)!=0)
+ 163   4                                      {
+ 164   5                                              VAL138 = val_138;
+ 165   5                                              VAL244 = val_244;
+ 166   5                                      }
+ 167   4                              }
+ 168   3                      }
+ 169   2              }
+ 170   1      }//按键读取
+ 171          int key_shake(void)
+ 172          {
+ 173   1              unsigned char l_138,r_244;
+ 174   1              Key();
+ 175   1              l_138 = VAL138;
+ 176   1              r_244 = VAL244;
+ 177   1              delay(20);
+ 178   1              Key();
+ 179   1              if((l_138 == VAL138)&&(r_244 == VAL244))        return 1;
+C51 COMPILER V9.00   ZSJYH                                                                 04/01/2019 19:05:11 PAGE 4   
+
+ 180   1              else    return 0;
+ 181   1      }//按键防抖
+ 182          void judge_key(unsigned char x,unsigned char y)
+ 183          {
+ 184   1              unsigned int sign=0;
+ 185   1              sign = keys[x-1][y-1];
+ 186   1              if((sign>=0) && (sign<=9))
+ 187   1              {
+ 188   2                      if(A_sign == 1) 
+ 189   2                      {
+ 190   3                              tens = sign;
+ 191   3                              x3 = tens;
+ 192   3                              A_sign = 0;
+ 193   3                      }
+ 194   2                      else if(B_sign == 1) 
+ 195   2                      {
+ 196   3                              ones = sign;
+ 197   3                              x4 = ones;
+ 198   3                              B_sign = 0;
+ 199   3                      }
+ 200   2              }
+ 201   1              else
+ 202   1              {
+ 203   2                      switch(sign)
+ 204   2                      {
+ 205   3                              case 10:
+ 206   3                                      A_sign = 1;
+ 207   3                                      B_sign = 0;
+ 208   3                                      break;
+ 209   3                              case 11:
+ 210   3                                      A_sign = 0;
+ 211   3                                      B_sign = 1;
+ 212   3                                      break;
+ 213   3                              case 12:
+ 214   3                                      A_sign = 0;
+ 215   3                                      B_sign = 0;
+ 216   3                                      bb = tens*10+ones;
+ 217   3                                      set_temp(bb);
+ 218   3                                      break;
+ 219   3                              case 14:
+ 220   3                                      flag = 0;
+ 221   3                                      flag1 = 1;
+ 222   3                                      break;
+ 223   3                              case 15:
+ 224   3                                      flag1=0;
+ 225   3                                      break;
+ 226   3                              default:
+ 227   3                                      break;
+ 228   3                      }
+ 229   2              }
+ 230   1      }//按键判断
+ 231          void key_get(void)
+ 232          {
+ 233   1              if(key_shake())
+ 234   1              {
+ 235   2                      Key();
+ 236   2                      judge_key(VAL138, VAL244);
+ 237   2              }
+ 238   1      }//按键获取总函数
+ 239          void set_temp(unsigned char x)
+ 240          {
+ 241   1              temperature = x;
+C51 COMPILER V9.00   ZSJYH                                                                 04/01/2019 19:05:11 PAGE 5   
+
+ 242   1              flag = 1;
+ 243   1      }//温度标识设置
+ 244          
+ 245          void change_temp(void)
+ 246          {
+ 247   1              temp_adc_display();
+ 248   1              if(temperature > room_temp)
+ 249   1              {
+ 250   2              
+ 251   2                      DAC = 0xFF;
+ 252   2              }
+ 253   1              else
+ 254   1              {
+ 255   2                      DAC = 0x00;
+ 256   2              }
+ 257   1      }//改变温度
+ 258          
+ 259          void temp_dac_change(void)
+ 260          {
+ 261   1              if(flag1==0)
+ 262   1              {
+ 263   2                      if(flag==1)
+ 264   2                      {
+ 265   3                              change_temp();
+ 266   3                      }
+ 267   2              }
+ 268   1              else
+ 269   1              {
+ 270   2                      DAC = 0x80; 
+ 271   2              }
+ 272   1      }//温度改变调度函数
+ 273          
+ 274          
+ 275          void main(void)
+ 276          {
+ 277   1              Init_Device();
+ 278   1              Timer3_Init(100);
+ 279   1              EA=1;
+ 280   1              while(1)
+ 281   1              {
+ 282   2                      temp_adc_display();
+ 283   2                      temp_dac_change();
+ 284   2                      key_get();
+ 285   2              }
+ 286   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    789    ----
+   CONSTANT SIZE    =      8    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     44      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

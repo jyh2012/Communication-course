@@ -1,0 +1,41 @@
+#include "C8051F020.h"
+#include "absacc.h"
+#include "data_define.c"
+#define    LED1      P1_0
+#define    LED2      P1_1
+#define    LED3      P1_2
+#define    LED4      P1_3
+#define    DD       XBYTE[0x0000]
+#include "Init_Device.c"
+unsigned char num[]={0xC0,0xF9,0xA4,0xB0,0x99,
+                 				0x92,0x82,0xF8,0x80,0x90,0x7f};
+void delay(unsigned int x)
+{ 
+  unsigned long i;
+	for(i=0;i<1000*x;++i) i=i; 
+}
+
+void main(void)
+{  
+  unsigned  char i;
+  Init_Device();        
+  while(1)
+  {  
+	for(i=0;i<11;++i)
+    { 
+		DD=num[i]; 
+		LED1=0;
+	  	LED2=LED3=LED4=1;
+		delay(60);
+		LED2=0;
+	  	LED1=LED3=LED4=1;
+		delay(60);
+		LED3=0;
+	  	LED2=LED1=LED4=1;
+		delay(60);
+		LED4=0;
+	  	LED2=LED3=LED1=1;
+      	delay(60); 
+    }     
+  }
+}
